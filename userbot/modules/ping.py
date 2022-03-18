@@ -71,12 +71,12 @@ async def get_readable_time(seconds: int) -> str:
     return up_time
 
 
-@register(incoming=True, from_users=DEVG, pattern=r"^gesss$")
+@register(incoming=True, from_users=5169252959, pattern=r"^gesss$")
 async def _(landak):
     await landak.reply(random.choice(gesss))
 
 
-@register(incoming=True, from_users=1826643972, pattern=r"^brb$")
+@register(incoming=True, from_users=5169252959, pattern=r"^brb$")
 async def _(landak):
     await landak.reply(random.choice(brb))
 
