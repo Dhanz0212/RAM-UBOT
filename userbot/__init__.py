@@ -1,5 +1,4 @@
 # Yaa begitu lah
-
 """ Userbot initialization. """
 
 import logging
@@ -22,6 +21,7 @@ from datetime import datetime
 from redis import StrictRedis
 from markdown import markdown
 from dotenv import load_dotenv
+from pytgcalls import PyTgCalls
 from requests import get
 from telethon.network.connection.tcpabridged import ConnectionTcpAbridged
 from telethon.sync import TelegramClient, custom, events
@@ -58,15 +58,16 @@ ENABLE_KILLME = True
 # Bot Logs setup:
 CONSOLE_LOGGER_VERBOSE = sb(os.environ.get("CONSOLE_LOGGER_VERBOSE", "False"))
 
-if CONSOLE_LOGGER_VERBOSE:
-    basicConfig(
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        level=DEBUG,
-    )
-else:
-    basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-                level=INFO)
+logging.basicConfig(
+    format="[%(name)s] - [%(levelname)s] - %(message)s",
+    level=logging.INFO,
+)
+logging.getLogger("asyncio").setLevel(logging.ERROR)
+logging.getLogger("pytgcalls").setLevel(logging.ERROR)
+logging.getLogger("telethon.network.mtprotosender").setLevel(logging.ERROR)
+logging.getLogger("telethon.network.connection.connection").setLevel(logging.ERROR)
 LOGS = getLogger(__name__)
+
 
 if version_info[0] < 3 or version_info[1] < 8:
     LOGS.info("You MUST have a python version of at least 3.8."
@@ -123,7 +124,7 @@ GITHUB_ACCESS_TOKEN = os.environ.get("GITHUB_ACCESS_TOKEN", None)
 # Custom (forked) repo URL for updater.
 UPSTREAM_REPO_URL = os.environ.get(
     "UPSTREAM_REPO_URL",
-    "https://github.com/ramadhani892/RAM-UBOT")
+    "https://github.com/ramadhani892/DEVEL")
 
 # sudo
 SUDO_USERS = {int(x) for x in os.environ.get("SUDO_USERS", "").split()}
@@ -137,7 +138,7 @@ SUDO_HANDLER = os.environ.get("SUDO_HANDLER", r"$")
 # default no leave
 BLACKLIST_CHAT = os.environ.get("BLACKLIST_CHAT", None)
 if not BLACKLIST_CHAT:
-    BLACKLIST_CHAT = [-1001692751821]
+    BLACKLIST_CHAT = [-1001692751821, -1001459812644]
 
 # only developer
 OWNDEV = os.environ.get("OWNDEV", None)
@@ -239,6 +240,7 @@ DEVS = [
     1720836764, #ram
 ]
 
+
 # Blacklist User for use RAM-UBOT
 while 0 < 6:
     _BLACKLIST = get(
@@ -274,7 +276,7 @@ BITLY_TOKEN = os.environ.get("BITLY_TOKEN", None)
 TERM_ALIAS = os.environ.get("TERM_ALIAS", "RAM-UBOT")
 
 # Bot Version
-BOT_VER = os.environ.get("BOT_VER", "9.2.1")
+BOT_VER = os.environ.get("BOT_VER", "9.2.3")
 
 # Default .alive Username
 ALIVE_USERNAME = os.environ.get("ALIVE_USERNAME", None)
@@ -295,6 +297,16 @@ IG_ALIVE = os.environ.get("IG_ALIVE") or "instagram.com/ramadh20"
 
 # Default emoji help
 EMOJI_HELP = os.environ.get("EMOJI_HELP") or "💫"
+
+# Picture For VCPLUGIN
+PLAY_PIC = (
+    os.environ.get("PLAY_PIC") or "https://telegra.ph/file/6213d2673486beca02967.png"
+)
+
+QUEUE_PIC = (
+    os.environ.get("QUEUE_PIC") or "https://telegra.ph/file/d6f92c979ad96b2031cba.png"
+)
+
 
 # Default .alive Group
 GROUP_LINK = os.environ.get(
@@ -379,11 +391,22 @@ for binary, path in binaries.items():
 
 # 'bot' variable
 if STRING_SESSION:
-    # pylint: disable=invalid-name
-    bot = TelegramClient(StringSession(STRING_SESSION), API_KEY, API_HASH)
+    session = StringSession(str(STRING_SESSION))
 else:
-    # pylint: disable=invalid-name
-    bot = TelegramClient("userbot", API_KEY, API_HASH)
+    session = "RamUbot"
+try:
+    bot = TelegramClient(
+        session=session,
+        api_id=API_KEY,
+        api_hash=API_HASH,
+        connection=ConnectionTcpAbridged,
+        auto_reconnect=True,
+        connection_retries=None,
+    )
+    call_py = PyTgCalls(bot)
+except Exception as e:
+    print(f"STRING_SESSION - {e}")
+    sys.exit()
 
 async def check_botlog_chatid():
     if not BOTLOG_CHATID and LOGSPAMMER:
@@ -526,7 +549,7 @@ with bot:
     try:
         bot(JoinChannelRequest("@UserbotCh"))
         bot(JoinChannelRequest("@ramgabut"))
-
+        
         dugmeler = CMD_HELP
         user = bot.get_me()
         uid = user.id
